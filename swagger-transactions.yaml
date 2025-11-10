@@ -1,0 +1,234 @@
+swagger: '2.0'
+info:
+  title: Bank Argent Transactions API
+  description: API for managing user transactions
+  version: '1.0.0'
+host: localhost:3001
+basePath: /api/v1
+schemes:
+  - http
+tags:
+  - name: Transaction Module
+    description: Operations related to user account transactions
+paths:
+  /accounts/{accountId}/transactions:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction Module
+      summary: Get all transactions for a specific account
+      description: Returns all transactions for the given account, grouped by month
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          type: string
+          description: Account ID
+        - in: query
+          name: month
+          required: false
+          type: string
+          description: Month in format YYYY-MM (optional)
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successfully retrieved transactions
+          schema:
+            type: object
+            properties:
+              accountId:
+                type: string
+              transactions:
+                type: array
+                items:
+                  $ref: '#/definitions/Transaction'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Account not found
+
+  /accounts/{accountId}/transactions/{transactionId}:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction Module
+      summary: Get a specific transaction
+      description: Retrieve detailed information for a specific transaction
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          type: string
+          description: Account ID
+        - in: path
+          name: transactionId
+          required: true
+          type: string
+          description: Transaction ID
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction details successfully retrieved
+          schema:
+            $ref: '#/definitions/Transaction'
+        '404':
+          description: Transaction not found
+
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction Module
+      summary: Update a specific transaction
+      description: Modify an existing transaction (for example, add a note or change category)
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          type: string
+          description: Account ID
+        - in: path
+          name: transactionId
+          required: true
+          type: string
+          description: Transaction ID
+        - in: body
+          name: body
+          description: Transaction data to update
+          required: true
+          schema:
+            $ref: '#/definitions/TransactionUpdate'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction successfully updated
+          schema:
+            $ref: '#/definitions/Transaction'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Transaction not found
+
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction Module
+      summary: Delete a transaction
+      description: Remove an existing transaction
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          type: string
+          description: Account ID
+        - in: path
+          name: transactionId
+          required: true
+          type: string
+          description: Transaction ID
+      responses:
+        '204':
+          description: Transaction successfully deleted
+        '404':
+          description: Transaction not found
+
+  /accounts/{accountId}/transactions/new:
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Transaction Module
+      summary: Create a new transaction
+      description: Add a new transaction to an account
+      parameters:
+        - in: path
+          name: accountId
+          required: true
+          type: string
+          description: Account ID
+        - in: body
+          name: body
+          description: Transaction details
+          required: true
+          schema:
+            $ref: '#/definitions/TransactionCreate'
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Transaction successfully created
+          schema:
+            $ref: '#/definitions/Transaction'
+        '400':
+          description: Invalid input data
+        '404':
+          description: Account not found
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+
+definitions:
+  Transaction:
+    type: object
+    properties:
+      id:
+        type: string
+        example: "trx_123456"
+      date:
+        type: string
+        format: date-time
+        example: "2025-11-05T14:00:00Z"
+      description:
+        type: string
+        example: "Payment Amazon"
+      amount:
+        type: number
+        example: 79.99
+      type:
+        type: string
+        enum: [debit, credit]
+      category:
+        type: string
+        example: "Shopping"
+      note:
+        type: string
+        example: "Gift for birthday"
+
+  TransactionCreate:
+    type: object
+    required:
+      - amount
+      - type
+      - description
+    properties:
+      amount:
+        type: number
+        example: 120.5
+      type:
+        type: string
+        enum: [debit, credit]
+      description:
+        type: string
+        example: "Restaurant dinner"
+      category:
+        type: string
+        example: "Food"
+
+  TransactionUpdate:
+    type: object
+    properties:
+      category:
+        type: string
+        example: "Bills"
+      note:
+        type: string
+        example: "Monthly electricity payment"
